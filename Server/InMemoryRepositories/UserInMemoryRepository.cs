@@ -1,66 +1,59 @@
 using Entities;
 using RepositoryContracts;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
+namespace InMemoryRepositories;
 
-namespace InMemoryRepositories
+public class UserInMemoryRepository : IUserRepository
 {
-    public class UserInMemoryRepository : IUserRepository
+    private readonly List<User> _users = new();
+    private int _nextId = 1;
+    private readonly object _lock = new();
+
+    public UserInMemoryRepository()
     {
-        public List<User> users { get; set; } = new List<User>();
+        // seed
+        AddAsync(new User { Username = "alice", Password = "pw1" }).Wait();
+        AddAsync(new User { Username = "bob", Password = "pw2" }).Wait();
+        AddAsync(new User { Username = "charlie", Password = "pw3" }).Wait();
+    }
 
-        public Task<User> AddAsync(User user)
+    public Task<User> AddAsync(User user)
+    {
+        lock (_lock)
         {
-            user.Id = users.Any()
-                ? users.Max(u => u.Id) + 1
-                : 1;
-            users.Add(user);
-            return Task.FromResult(user);
+            user.Id = _nextId++;
+            _users.Add(user);
         }
+        return Task.FromResult(user);
+    }
 
-        public Task UpdateAsync(User user)
+    public Task<IEnumerable<User>> GetAllAsync() => Task.FromResult(_users.AsEnumerable());
+
+    public Task<User?> GetByIdAsync(int id) => Task.FromResult(_users.FirstOrDefault(u => u.Id == id));
+
+    public Task<User?> GetByUsernameAsync(string username) =>
+        Task.FromResult(_users.FirstOrDefault(u => u.Username.Equals(username, System.StringComparison.OrdinalIgnoreCase)));
+
+    public Task<User> UpdateAsync(User user)
+    {
+        lock (_lock)
         {
-            User? existingUser = users.SingleOrDefault(u => u.Id == user.Id);
-            if (existingUser is null)
-            {
-                throw new InvalidOperationException(
-                    $"User with ID '{user.Id}' not found");
-            }
-
-            users.Remove(existingUser);
-            users.Add(user);
-
-            return Task.CompletedTask;
+            var idx = _users.FindIndex(u => u.Id == user.Id);
+            if (idx == -1) throw new KeyNotFoundException("User not found");
+            _users[idx] = user;
         }
+        return Task.FromResult(user);
+    }
 
-        public Task DeleteAsync(int id)
+    public Task DeleteAsync(int id)
+    {
+        lock (_lock)
         {
-            User? userToRemove = users.SingleOrDefault(u => u.Id == id);
-            if (userToRemove is null)
-            {
-                throw new InvalidOperationException(
-                    $"User with ID '{id}' not found");
-            }
-
-            users.Remove(userToRemove);
-            return Task.CompletedTask;
+            _users.RemoveAll(u => u.Id == id);
         }
-
-        public Task<User> GetSingleAsync(int id)
-        {
-            User? user = users.SingleOrDefault(u => u.Id == id);
-
-            if (user is null)
-            {
-                throw new InvalidOperationException(
-                    $"User with ID '{id}' not found");
-            }
-
-            return Task.FromResult(user);
-        }
-
-        public IQueryable<User> GetMany()
-        {
-            return users.AsQueryable();
-        }
+        return Task.CompletedTask;
     }
 }
