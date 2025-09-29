@@ -41,8 +41,8 @@ public class CliApp
             switch (choice)
             {
                 case "1":
-                    var login = new LoginView(_userRepo, ref _currentUser);
-                    await login.ShowAsync();
+                    var login = new LoginView(_userRepo);
+                    _currentUser = await login.ShowAsync();
                     break;
                 case "2":
                     _currentUser = null;

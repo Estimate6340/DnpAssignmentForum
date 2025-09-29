@@ -1,36 +1,50 @@
 using RepositoryContracts;
 using Entities;
+using System;
+using System.Threading.Tasks;
 
-namespace CLI.UI.Users;
-
-public class LoginView
+namespace CLI.UI.Users
 {
-    private readonly IUserRepository _userRepo;
-    private User? _currentUser;
-
-    public LoginView(IUserRepository userRepo, ref User? currentUser)
+    public class LoginView
     {
-        _userRepo = userRepo;
-        _currentUser = currentUser;
-    }
+        private readonly IUserRepository _userRepo;
 
-    public async Task ShowAsync()
-    {
-        Console.Write("Username: ");
-        var username = Console.ReadLine() ?? "";
-        Console.Write("Password: ");
-        var password = Console.ReadLine() ?? "";
+        public LoginView(IUserRepository userRepo)
+        {
+            _userRepo = userRepo;
+        }
 
-        var user = await _userRepo.GetByUsernameAsync(username);
-        if (user != null && user.Password == password)
+        // Return the logged-in user (or null if login failed / canceled)
+        public async Task<User?> ShowAsync()
         {
-            _currentUser = user;
-            Console.WriteLine($"Logged in as {user.Username}");
+            Console.Clear();
+            Console.WriteLine("=== LOGIN ===");
+            Console.Write("Username (or blank to cancel): ");
+            string? username = Console.ReadLine()?.Trim();
+            if (string.IsNullOrEmpty(username)) return null;
+
+            Console.Write("Password: ");
+            string? password = Console.ReadLine(); // simple CLI, not hiding
+
+            var user = await _userRepo.GetByUsernameAsync(username);
+            if (user == null)
+            {
+                Console.WriteLine("No such user. Press any key...");
+                Console.ReadKey();
+                return null;
+            }
+
+            // If you store hashed passwords adjust check accordingly
+            if (user.Password != password)
+            {
+                Console.WriteLine("Incorrect password. Press any key...");
+                Console.ReadKey();
+                return null;
+            }
+
+            Console.WriteLine($"Welcome, {user.Username}! Press any key...");
+            Console.ReadKey();
+            return user;
         }
-        else
-        {
-            Console.WriteLine("Invalid login.");
-        }
-        Console.ReadKey();
     }
 }
