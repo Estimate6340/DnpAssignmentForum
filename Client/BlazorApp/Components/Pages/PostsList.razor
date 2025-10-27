@@ -1,0 +1,54 @@
+@page "/posts"
+@using BlazorApp.Services
+@inject IPostService Posts
+
+<h2>Posts</h2>
+
+<div class="mb-3 d-flex gap-2">
+    <input class="form-control" placeholder="Filter by title…" @bind="_title" />
+    <input class="form-control" placeholder="Filter by username…" @bind="_username" />
+    <button class="btn btn-primary" @onclick="Load">Search</button>
+    <a class="btn btn-success ms-auto" href="/posts/new">New Post</a>
+</div>
+
+@if (_loading) { <p>Loading…</p> }
+else if (!string.IsNullOrWhiteSpace(_error)) { <p class="text-danger">@_error</p> }
+else if (_posts.Count == 0) { <p>No posts found.</p> }
+else
+{
+    <ul class="mt-3">
+        @foreach (var p in _posts)
+        {
+            <li>
+                <a href="/posts/@p.Id">@p.Title</a>
+                @if (!string.IsNullOrWhiteSpace(p.Username))
+                {
+                    <span class="text-muted"> — @p.Username</span>
+                }
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private string? _title;
+    private string? _username;
+    private bool _loading = true;
+    private string? _error;
+    private List<ApiContracts.DTOs.PostDTO> _posts = new();
+
+    protected override async Task OnInitializedAsync() => await Load();
+
+    private async Task Load()
+    {
+        try
+        {
+            _loading = true;
+            var res = await Posts.GetManyAsync(title: _title, username: _username, includeComments: false);
+            _posts = res.ToList();
+            _error = null;
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _loading = false; }
+    }
+}

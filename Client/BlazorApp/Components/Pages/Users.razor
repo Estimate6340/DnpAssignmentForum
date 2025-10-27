@@ -1,0 +1,30 @@
+@page "/users"
+@using BlazorApp.Services
+@inject IUserService users
+
+<h1>Users</h1>
+
+@if (_loading) { <p>Loading…</p> }
+else if (_error is not null) { <p class="text-danger">@_error</p> }
+else
+{
+    <ul>
+        @foreach (var u in _users)
+        {
+            <li>@u.Id — @u.Username</li>
+        }
+    </ul>
+}
+
+@code {
+    private bool _loading = true;
+    private string? _error;
+    private IReadOnlyList<ApiContracts.DTOs.UserDTO> _users = Array.Empty<ApiContracts.DTOs.UserDTO>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { _users = await users.GetAllUsersAsync(); }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _loading = false; }
+    }
+}
