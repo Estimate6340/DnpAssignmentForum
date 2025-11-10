@@ -1,4 +1,5 @@
 @page "/posts/new"
+@attribute [Authorize]
 @using BlazorApp.Services
 @inject IPostService Posts
 @inject ICurrentUser CurrentUser
@@ -6,7 +7,10 @@
 
 <h2>New Post</h2>
 
-@if (!string.IsNullOrWhiteSpace(_error)) { <p class="text-danger">@_error</p> }
+@if (!string.IsNullOrWhiteSpace(_error)) 
+{ 
+    <p class="text-danger">@_error</p> 
+}
 
 <EditForm Model="_model" OnValidSubmit="HandleSubmit">
     <DataAnnotationsValidator />
@@ -34,10 +38,22 @@
     {
         try
         {
-            _model.UserId = CurrentUser.UserId; // Step 5.3
+            // 👇 await the async method and handle null (not logged in)
+            var userId = await CurrentUser.GetUserIdAsync();
+            if (userId == null)
+            {
+                _error = "Please log in before creating a post.";
+                return;
+            }
+
+            _model.UserId = userId.Value;  // set the correct user ID
             var created = await Posts.AddAsync(_model);
+
             Nav.NavigateTo($"/posts/{created.Id}");
         }
-        catch (Exception ex) { _error = ex.Message; }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
     }
 }

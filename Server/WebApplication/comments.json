@@ -10,5 +10,11 @@
     "PostId": 1,
     "UserId": 1,
     "Body": "Hej"
+  },
+  {
+    "Id": 3,
+    "PostId": 2,
+    "UserId": 1,
+    "Body": "Comment"
   }
 ]

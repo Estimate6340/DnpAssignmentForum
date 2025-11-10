@@ -70,8 +70,16 @@ else if (_post is not null)
     {
         try
         {
+            var userId = await CurrentUser.GetUserIdAsync();   // 👈 await
+            if (userId is null)
+            {
+                _formError = "Please log in to comment.";
+                return;
+            }
+
             _newComment.PostId = id;
-            _newComment.UserId = CurrentUser.UserId; // Step 5.3
+            _newComment.UserId = userId.Value;                 // 👈 set actual id
+
             var created = await Comments.AddAsync(_newComment);
             _comments.Add(created);
             _newComment.Body = "";
@@ -79,4 +87,5 @@ else if (_post is not null)
         }
         catch (Exception ex) { _formError = ex.Message; }
     }
+
 }

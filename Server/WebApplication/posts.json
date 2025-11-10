@@ -4,5 +4,29 @@
     "UserId": 1,
     "Title": "Hej",
     "Body": "Hello World"
+  },
+  {
+    "Id": 2,
+    "UserId": 1,
+    "Title": "Title",
+    "Body": "Body"
+  },
+  {
+    "Id": 3,
+    "UserId": 1,
+    "Title": "sad",
+    "Body": "qads"
+  },
+  {
+    "Id": 4,
+    "UserId": 1,
+    "Title": "sdfsdf",
+    "Body": "wwerwer"
+  },
+  {
+    "Id": 5,
+    "UserId": 2,
+    "Title": "hej",
+    "Body": "fra shuxiao"
   }
 ]
