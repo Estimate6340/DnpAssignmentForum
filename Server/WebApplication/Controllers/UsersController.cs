@@ -49,8 +49,9 @@ public class UsersController : ControllerBase
         if (existing != null)
             return BadRequest($"Username '{create.Username}' already exists.");
 
-        var user = new User { Username = create.Username, Password = create.Password };
+        var user = new User(create.Username, create.Password);
         var created = await _userRepo.AddAsync(user);
+
 
         var dto = new UserDTO { Id = created.Id, Username = created.Username };
         return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto);

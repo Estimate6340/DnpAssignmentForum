@@ -96,7 +96,7 @@ public class CommentsController : ControllerBase
         var user = await _userRepo.GetByIdAsync(create.UserId);
         if (user == null) return BadRequest("User not found.");
 
-        var comment = new Comment { PostId = create.PostId, UserId = create.UserId, Body = create.Body };
+        var comment = new Comment(create.PostId, create.UserId, create.Body);
         var created = await _commentRepo.AddAsync(comment);
 
         var dto = new CommentDTO()

@@ -133,8 +133,9 @@ public class PostsController : ControllerBase
         var author = await _userRepo.GetByIdAsync(create.UserId);
         if (author == null) return BadRequest("User (author) not found.");
 
-        var post = new Post { UserId = create.UserId, Title = create.Title, Body = create.Body };
+        var post = new Post(create.UserId, create.Title, create.Body);
         var created = await _postRepo.AddAsync(post);
+
 
         var dto = new PostDTO()
         {

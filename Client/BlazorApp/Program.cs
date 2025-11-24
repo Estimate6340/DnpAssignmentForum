@@ -1,52 +1,17 @@
-using BlazorApp.Components;
-using BlazorApp.Services;
-using BlazorApp.Auth;                      
-using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using BlazorApp;
+using BlazorApp.Components; // <-- adjust to your client namespace
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+builder.RootComponents.Add<App>("#app");
+builder.RootComponents.Add<HeadOutlet>("head::after");
 
-builder.Services.AddHttpClient("Api", c =>
+// HttpClient to talk to your server
+builder.Services.AddScoped(sp => new HttpClient 
 {
-    c.BaseAddress = new Uri("http://localhost:5236/");
+    BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
 });
 
-builder.Services.AddHttpClient<IUserService, HttpUserService>(c =>
-{
-    c.BaseAddress = new Uri("http://localhost:5236/");
-});
-
-builder.Services.AddHttpClient<IPostService, HttpPostService>(c =>
-{
-    c.BaseAddress = new Uri("http://localhost:5236/");
-});
-builder.Services.AddHttpClient<ICommentService, HttpCommentService>(c =>
-{
-    c.BaseAddress = new Uri("http://localhost:5236/");
-});
-
-builder.Services.AddAuthorizationCore();
-builder.Services.AddScoped<AuthenticationStateProvider, SimpleAuthProvider>();
-builder.Services.AddScoped(sp =>
-    sp.GetRequiredService<IHttpClientFactory>().CreateClient("Api"));
-
-builder.Services.AddScoped<ICurrentUser, CurrentUser>();
-
-var app = builder.Build();
-
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    app.UseHsts();
-}
-
-app.UseHttpsRedirection();
-app.UseAntiforgery();
-
-app.MapStaticAssets();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
-
-app.Run();
+await builder.Build().RunAsync();
